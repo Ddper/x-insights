@@ -39,6 +39,7 @@ async def create_document(
     document.url = payload.url
     document.hash_id = hash_url(payload.url)
     document.metadata_map = {}
+    document.description = payload.description
     db.add(document)
     await db.commit()
     await db.refresh(document)

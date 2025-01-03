@@ -25,3 +25,4 @@ def url_must_be_unique(v: Any):
 
 class CreateDocumentSchema(BaseModel):
     url: Annotated[str, AfterValidator(url_must_be_unique)]
+    description: str

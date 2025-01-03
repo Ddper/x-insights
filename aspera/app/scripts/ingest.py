@@ -9,7 +9,7 @@ settings = get_settings()
 
 async def ingest():
     await init_llama_index_settings(settings)
-    await ingest_web("https://docs.llamaindex.ai/en/stable/#introduction")
+    await ingest_web("https://docs.llamaindex.ai/en/stable/understanding/")
 
 
 def main():

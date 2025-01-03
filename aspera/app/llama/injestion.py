@@ -4,6 +4,7 @@ from llama_index.readers.web import TrafilaturaWebReader
 from llama_index.vector_stores.postgres import PGVectorStore
 
 from app.settings import get_settings
+from app.utils.document import hash_url
 
 
 settings = get_settings()
@@ -26,6 +27,8 @@ async def ingest_web(url: str) -> None:
     )
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     documents = await TrafilaturaWebReader().aload_data(urls=[url])
+    for document in documents:
+        document.metadata = {"hash_id": hash_url(url)}
     # node_parser = SentenceSplitter(chunk_size=Settings.chunk_size, chunk_overlap=Settings.chunk_overlap)
     # nodes = await node_parser.aget_nodes_from_documents(documents)
     # VectorStoreIndex(
