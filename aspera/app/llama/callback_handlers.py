@@ -19,7 +19,10 @@ class ChatCallbackHandler(BaseCallbackHandler):
 
     def on_event_end(self, event_type: CBEventType, payload: Optional[Dict[str, Any]] = None, event_id: str = "",
                      **kwargs: Any) -> None:
-        pass
+        if event_type == CBEventType.SUB_QUESTION:
+            qa_pair = payload[EventPayload.SUB_QUESTION]
+            print("Sub Question: " + qa_pair.sub_q.sub_question.strip())
+            print("Answer: " + qa_pair.answer.strip())
 
     def start_trace(self, trace_id: Optional[str] = None) -> None:
         pass

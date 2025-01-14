@@ -20,4 +20,10 @@ dependencies = [
     "arize-phoenix-otel>=0.6.1",
     "openinference-instrumentation-llama-index>=3.1.2",
     "trafilatura>=2.0.0",
+    "sse-starlette>=2.2.1",
+    "llama-index-llms-openai-like>=0.3.3",
+    "llama-index-agent-openai>=0.4.1",
+    "llama-index-storage-index-store-postgres>=0.4.0",
+    "llama-index-storage-docstore-postgres>=0.3.0",
+    "markitdown>=0.0.1a3",
 ]

@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.llama.engine import init_llama_index_settings
 from app.settings import get_settings
-from app.routers import document
+from app.routers import document, chat
 
 
 @asynccontextmanager
@@ -17,10 +17,11 @@ async def lifespan(api_app: FastAPI):
     yield
 
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 api_router = APIRouter()
 api_router.include_router(document.router)
+api_router.include_router(chat.router)
 app.include_router(api_router, prefix="/api")
 
 origins = [

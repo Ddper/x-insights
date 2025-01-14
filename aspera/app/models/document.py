@@ -21,5 +21,6 @@ class Document(Base):
     hash_id = Column(VARCHAR(32), nullable=False, unique=True, index=True)
     url = Column(String, nullable=False)
     metadata_map = Column(JSONB, nullable=True)
+
     description = Column(String, nullable=True)
     status = Column(to_pg_enum(DocumentIndexStatusEnum), default=DocumentIndexStatusEnum.INDEXING)
