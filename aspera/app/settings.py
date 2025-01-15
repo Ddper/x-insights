@@ -16,7 +16,8 @@ class Settings(BaseSettings):
     async_vector_database_url: str
     vector_schema_name: str
     vector_table_name: str
-
+    chat_schema_name: str
+    chat_table_name: str
     chunk_size: int = 512
     chunk_overlap: int = 50
     tracer_provider_endpoint: str = "http://localhost:6006/v1/traces"

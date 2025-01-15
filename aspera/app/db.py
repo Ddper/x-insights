@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker, Session
 
 from app.models.base import Base  # noqa
 from app.models.document import *  # noqa
+from app.models.chat import *  # noqa
 
 from app.settings import get_settings
 

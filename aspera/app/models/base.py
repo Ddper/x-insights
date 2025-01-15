@@ -17,7 +17,7 @@ def camel_to_snake(name):
 @as_declarative()
 class Base:
     id = Column(
-        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"), unique=True, nullable=True
+        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"), unique=True, nullable=False
     )
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(

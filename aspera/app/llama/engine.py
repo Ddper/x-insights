@@ -25,14 +25,29 @@ from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.storage.chat_store import SimpleChatStore
 from llama_index.vector_stores.postgres import PGVectorStore
 from llama_index.storage.index_store.postgres import PostgresIndexStore
+from llama_index.storage.chat_store.postgres import PostgresChatStore
+from llama_index.core.indices.base import BaseIndex
 
 from app.settings import Settings as AppSettings
 from app.schemas.document import DocumentSchema
 from app.llama.callback_handlers import ChatCallbackHandler
 from app.llama.injestion import build_storage_context
+from app.settings import get_settings
 
 
-chat_store = SimpleChatStore()
+def build_chat_memory(settings: AppSettings, chat_id: str) -> ChatMemoryBuffer:
+    # chat_store = SimpleChatStore()
+    chat_store = PostgresChatStore.from_uri(
+        uri=settings.async_database_url,
+        schema_name=settings.chat_schema_name,
+        table_name=settings.chat_table_name
+    )
+    chat_memory = ChatMemoryBuffer.from_defaults(
+        token_limit=3000,
+        chat_store=chat_store,
+        chat_store_key=chat_id
+    )
+    return chat_memory
 
 
 async def init_llama_index_settings(settings: AppSettings):
@@ -60,7 +75,7 @@ async def init_llama_index_settings(settings: AppSettings):
     LlamaIndexInstrumentor().instrument(tracer_provider=tracer_provider)
 
 
-def index_to_query_engine(document_hash_id: str, index: VectorStoreIndex) -> BaseQueryEngine:
+def index_to_query_engine(document_hash_id: str, index: BaseIndex) -> BaseQueryEngine:
     filters = MetadataFilters(filters=[ExactMatchFilter(key="hash_id", value=document_hash_id)])
     # return index.as_query_engine(**{"similarity_top_k": 3, "filters": filters})
 
@@ -104,11 +119,7 @@ async def get_agent_engine(
             description=document.description
         ))
     callback_manager = CallbackManager([ChatCallbackHandler(send_stream)])
-    chat_memory = ChatMemoryBuffer.from_defaults(
-        token_limit=3000,
-        chat_store=chat_store,
-        chat_store_key=chat_id
-    )
+    chat_memory = build_chat_memory(settings, chat_id=chat_id)
     # return OpenAIAgent.from_tools(
     #     tools=tools,
     #     llm=Settings.llm,

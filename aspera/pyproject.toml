@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.14.0",
-    "asyncpg>=0.30.0",
+    "asyncpg==0.29.0",
     "fastapi[all]>=0.115.6",
     "greenlet>=3.1.1",
     "llama-index-llms-dashscope>=0.3.0",
@@ -26,4 +26,5 @@ dependencies = [
     "llama-index-storage-index-store-postgres>=0.4.0",
     "llama-index-storage-docstore-postgres>=0.3.0",
     "markitdown>=0.0.1a3",
+    "llama-index-storage-chat-store-postgres>=0.2.0",
 ]

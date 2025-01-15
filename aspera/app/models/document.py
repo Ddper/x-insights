@@ -24,3 +24,4 @@ class Document(Base):
 
     description = Column(String, nullable=True)
     status = Column(to_pg_enum(DocumentIndexStatusEnum), default=DocumentIndexStatusEnum.INDEXING)
+    chats = relationship("ChatDocument", back_populates="document")

@@ -7,8 +7,15 @@ from sqlalchemy import select, delete, update
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.schemas.document import DocumentSchema, CreateDocumentSchema
+from app.schemas.chat import CreateChatSchema, ChatSchema
 from app.models.document import Document, DocumentIndexStatusEnum
+from app.models.chat import Chat, ChatDocument
 from app.utils.document import hash_url
+from app.llama.engine import build_chat_memory
+from app.settings import get_settings
+
+
+settings = get_settings()
 
 
 async def list_documents(
@@ -19,7 +26,7 @@ async def list_documents(
     stmt = stmt.limit(limit)
     result = await db.execute(stmt)
     documents = result.scalars().all()
-    return [DocumentSchema.from_orm(doc) for doc in documents]
+    return [DocumentSchema.model_validate(doc) for doc in documents]
 
 
 async def fetch_document(db: AsyncSession, document_id: str) -> Optional[DocumentSchema]:
@@ -27,7 +34,7 @@ async def fetch_document(db: AsyncSession, document_id: str) -> Optional[Documen
     result = await db.execute(stmt)
     document = result.scalars().first()
     if document is not None:
-        return DocumentSchema.from_orm(document)
+        return DocumentSchema.model_validate(document)
     return None
 
 
@@ -43,7 +50,7 @@ async def create_document(
     db.add(document)
     await db.commit()
     await db.refresh(document)
-    return DocumentSchema.from_orm(document)
+    return DocumentSchema.model_validate(document)
 
 
 async def update_document_status(db: AsyncSession, document_id: UUID, status: DocumentIndexStatusEnum):
@@ -51,3 +58,39 @@ async def update_document_status(db: AsyncSession, document_id: UUID, status: Do
     stmt = stmt.values(status=status)
     await db.execute(stmt)
     await db.commit()
+
+
+async def fetch_chat(
+        db: AsyncSession, chat_id: str
+) -> Optional[ChatSchema]:
+    stmt = (select(Chat)
+            .options(
+                joinedload(Chat.chat_documents).subqueryload(ChatDocument.document)
+            )
+            .where(Chat.id == chat_id))
+    result = await db.execute(stmt)
+    chat = result.scalars().first()
+    if chat is not None:
+        chat_memory = build_chat_memory(settings, chat_id)
+        chat_dict = {
+            **chat.__dict__,
+            "documents": [
+                chat_doc.document for chat_doc in chat.chat_documents
+            ],
+            "chat_history": chat_memory.get_all()
+        }
+        return ChatSchema(**chat_dict)
+    return None
+
+
+async def create_chat(
+        db: AsyncSession,
+        chat_payload: CreateChatSchema
+) -> ChatSchema:
+    chat = Chat()
+    chat_documents = [ChatDocument(document_id=document_id, chat=chat) for document_id in chat_payload.document_ids]
+    db.add(chat)
+    db.add_all(chat_documents)
+    await db.commit()
+    await db.refresh(chat)
+    return await fetch_chat(db, chat.id)
