@@ -5,4 +5,7 @@ from app.db import AsyncSessionLocal
 
 async def get_db() -> Generator[AsyncSession, None, None]:
     async with AsyncSessionLocal() as db:
-        yield db
+        try:
+            yield db
+        finally:
+            await db.close()

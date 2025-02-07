@@ -10,7 +10,12 @@ from app.settings import get_settings
 
 settings = get_settings()
 
-async_engine = create_async_engine(settings.async_database_url)
+async_engine = create_async_engine(
+    settings.async_database_url,
+    pool_size=10,
+    max_overflow=20,
+    pool_pre_ping=True
+)
 
 AsyncSessionLocal = async_sessionmaker(autoflush=False, bind=async_engine)
 
