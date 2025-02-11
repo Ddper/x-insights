@@ -17,8 +17,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud
 from app.settings import get_settings
 from app.llama.engine import get_agent_engine
+from app.llama.callback_handlers import ChatCallbackHandler
 from app.schemas.document import DocumentSchema
-from app.schemas.chat import CreateChatSchema, ChatSchema, StreamedMessage, ChatRequest
+from app.schemas.chat import CreateChatSchema, ChatSchema, StreamedMessage, ChatRequest, StreamedEvent
 from app.models.document import DocumentIndexStatusEnum
 from app.dependencies import get_db
 
@@ -47,19 +48,22 @@ async def handle_agent_message(
 async def stream_text(
         chat_id: UUID,
         user_message: str,
-        chat_schema: ChatSchema,
-        send_stream: MemoryObjectSendStream,
-        receive_stream: MemoryObjectReceiveStream
+        documents: List[DocumentSchema]
 ):
+    send_stream: MemoryObjectSendStream
+    receive_stream: MemoryObjectReceiveStream
+    send_stream, receive_stream = anyio.create_memory_object_stream(10)
     async with anyio.create_task_group() as tg:
-        tg.start_soon(handle_agent_message, str(chat_id), user_message, send_stream, chat_schema.documents)
+        tg.start_soon(handle_agent_message, str(chat_id), user_message, send_stream, documents)
 
         async with receive_stream:
             async for message_obj in receive_stream:  # type: ignore
                 if isinstance(message_obj, StreamedMessage):
                     yield "0:{text}\n".format(text=json.dumps(message_obj.content))
-                    # yield json.dumps({"content": message_obj.content}
+                elif isinstance(message_obj, StreamedEvent):
+                    yield "d:{text}\n".format(text=message_obj.content)
             yield "d:{text}\n".format(text=json.dumps({"finishReason": "stop"}))
+
 
 @router.post("/{chat_id}/message")
 async def chat(
@@ -69,14 +73,12 @@ async def chat(
 ) -> StreamingResponse:
     messages = request.messages
     user_message = messages[-1].content
-    send_stream: MemoryObjectSendStream
-    receive_stream: MemoryObjectReceiveStream
     chat_schema = await crud.fetch_chat(db, str(chat_id))
-    send_stream, receive_stream = anyio.create_memory_object_stream(10)
-    response = StreamingResponse(stream_text(chat_id, user_message, chat_schema, send_stream, receive_stream),
+    response = StreamingResponse(stream_text(chat_id, user_message, chat_schema.documents),
                                  media_type="text/event-stream")
     response.headers["x-vercel-ai-data-stream"] = "v1"
     return response
+
 
 @router.get("/{chat_id}")
 async def get_chat(

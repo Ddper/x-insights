@@ -118,7 +118,9 @@ async def get_agent_engine(
             name="summary-" + document.description.replace(" ", "-"),
             description=document.description
         ))
-    callback_manager = CallbackManager([ChatCallbackHandler(send_stream)])
+
+    callback_handler = ChatCallbackHandler(send_stream)
+    callback_manager = CallbackManager([callback_handler])
     chat_memory = build_chat_memory(settings, chat_id=chat_id)
     # return OpenAIAgent.from_tools(
     #     tools=tools,

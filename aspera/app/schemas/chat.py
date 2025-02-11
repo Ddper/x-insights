@@ -27,6 +27,11 @@ class StreamedMessage(BaseModel):
     content: str
 
 
+class StreamedEvent(BaseModel):
+
+    content: str
+
+
 class ClientAttachment(BaseModel):
     name: str
     contentType: str

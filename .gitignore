@@ -208,3 +208,4 @@ yarn-error.log*
 .vercel
 .vscode
 .env*.local
+alembic.ini
